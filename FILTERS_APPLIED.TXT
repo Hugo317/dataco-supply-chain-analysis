@@ -1,0 +1,260 @@
+FILTERS APPLIED ACROSS THE NOTEBOOKS — WHAT, WHERE, WHY
+=========================================================
+
+Three data-generation problems were found in DataCoSupplyChainDataset.csv while
+building this archive. This file records which notebooks needed a fix because
+of which problem, what the fix was, and what it changed. Full technical
+detail for each problem lives in the notebook named next to it below.
+
+THE THREE PROBLEMS
+-------------------
+
+1. ORDER-COMPOSITION ARTIFACT (Oct 2017 onward)
+   Found in: 0.1_company_growth.ipynb §2
+   From Nov 2017 on, every order collapses to exactly 1 line item (vs ~3.0
+   before) and per-line Sales/profit shift to a different, higher average —
+   a different data-generation regime, not a change in the business. Order
+   counts, items-per-order, and revenue-per-order stop being comparable
+   across this boundary. Oct 2017 is used as the cutoff everywhere (not Nov)
+   to match the convention 0.1 and 0.6 already established.
+
+2. FAKE CUSTOMER IDs (Oct 2017 onward)
+   Found in: 0.8_consumer_base_analysis.ipynb §2
+   8,322 of 20,652 Order Customer Ids (40%) appear ONLY from Oct 2017 on, and
+   100% of those have exactly one lifetime order — a byproduct of problem #1
+   (every split single-item order looks like a new one-time customer). This
+   alone inflates the naive one-time-customer rate to 43% vs. the true 4.6%.
+
+3. REGION-ROTATION ARTIFACT (dataset-wide, not just Oct 2017+)
+   Found in: 0.5_by_region_analysis.ipynb §2, 0.7_region_activity_gaps.ipynb
+   19 of the 23 `Order Region`s go permanently dark for months at a time —
+   most only have 5-6 consecutive active months out of the ~36-month
+   dataset, then never appear again. No region has continuous coverage.
+   This is NOT fixable with a date cutoff (it isn't confined to one window),
+   so it's handled differently from #1 and #2 below.
+
+
+NOTEBOOK-BY-NOTEBOOK
+---------------------
+
+0_data_overview.ipynb
+  Filter applied: NONE (by design)
+  Why: this notebook's whole purpose is to show the raw data as-is, artifacts
+  included — it's the source that later notebooks cite. Filtering it would
+  hide the very things it exists to surface.
+
+0.1_company_growth.ipynb
+  Filter applied: date cutoff (Oct 2017+) for growth/trend figures — already
+  in place, this is the notebook that discovered problem #1.
+  Why: full-year and quarterly growth numbers looked like a business
+  collapse in 2017 Q4 / 2018 Q1 until traced to the artifact.
+  No changes made this pass.
+
+0.2_sales_corr.ipynb
+  Filter applied:
+    (a) date cutoff (Oct 2017+, problem #1) before the region / discount /
+        category correlation sections (§2-§4). The page-views-vs-purchases
+        section (§1) is deliberately EXEMPT — it's scoped to the clickstream
+        log's own Sep 2017-Jan 2018 window (the only period that file
+        covers), and compares line-item-level counts, which aren't distorted
+        by problem #1 the way order-level counts are.
+    (b) added a caveat note (problem #3, region-rotation) next to the
+        region-ranked margin table, since region totals still reflect very
+        unequal active windows even after (a).
+  Why: §2-§4 aggregate over the full order history; without the cutoff a
+  region/category's ranking could shift just because more of its
+  differently-shaped tail-end orders survived in the raw file.
+  Numeric impact: none of the Takeaways cite specific figures, so no prose
+  needed correcting.
+
+0.3_prod_category_analyzis.ipynb
+  Filter applied: date cutoff (Oct 2017+, problem #1), applied right after
+  load, before all 50-category rollups.
+  Why: category totals shouldn't be higher or lower just because a category
+  happened to have more of its tail-end (differently-shaped) orders survive
+  in the raw file.
+  Numeric impact: discount-rate spread shifted from 9.3%-10.9% to 9.34%-
+  10.94% (unchanged, wasn't worth rewriting). Corrected a stale sentence in
+  the intro that had claimed category sums were "unaffected" by the artifact
+  — they are computed after exclusion now, consistent with the rest of the
+  notebook.
+
+0.4_prod_region_cross.ipynb
+  Filter applied:
+    (a) date cutoff (Oct 2017+, problem #1).
+    (b) added a `months_active` column to the region leaderboard (problem
+        #3, region-rotation) — can't fix unequal exposure with a row filter,
+        so the column makes it visible instead.
+  Why + impact: this notebook cross-tabs region x category, so both
+  problems hit it directly. The date cutoff had a much bigger knock-on
+  effect here than anywhere else: 18 categories (including Computers,
+  Cameras, Crafts) dropped below the "10 order lines in at least one region"
+  threshold entirely and disappeared from the naive-vs-weighted-margin
+  analysis (32 categories qualify now, not 50). This rewrote two of the
+  notebook's headline examples:
+    - "Computers in Oceania" (a lone outlier cell) no longer exists in the
+      data shown — replaced with "Golf Shoes in West Asia" (-33.9% margin
+      against a column that's otherwise +9% to +27%).
+    - Basketball used to be the naive-average illusion (rank 9 -> 47 once
+      weighted). It's now dead last on BOTH naive and weighted rank (32 of
+      32) — it's genuinely negative-margin, not a coverage artifact. Lacrosse
+      took over as the naive-average illusion example instead (rank 5 -> 18).
+    - Cardio Equipment's finding survives (still sold in all 23 regions,
+      still drops sharply once weighted) but the exact numbers moved: rank
+      9 -> 26 (was 19 -> 37), a 17-rank drop (was 18).
+
+0.5_by_region_analysis.ipynb
+  Filter applied: date cutoff (Oct 2017+, problem #1) for the profit/revenue/
+  margin ranking (§1) and every `pct_of_company_profit` figure. Deliberately
+  NOT applied to the activity-window table in §2 (`active_start`,
+  `active_end`, `days_active`, `months_with_orders`) — that section's whole
+  point is measuring true region activity (problem #3), so it uses the full
+  unfiltered data on purpose. The notebook now carries both `df` (filtered)
+  and `df_full` (raw) for this reason.
+  Why + impact: this is the notebook that selects the TOP3/BOT3 regions
+  feeding every 0.5.x deep dive, so getting it right mattered most. The
+  bottom 3 (Central Asia, Canada, Southern Africa) were unaffected — their
+  data ends before Jan 2017, well before the cutoff. The top 3 SET didn't
+  change, but the ORDER did: Central America overtakes Western Europe for
+  #1 by profit $ ($616K vs $551K) once Western Europe's Oct-Nov 2017 tail is
+  excluded. Company total profit used as the denominator for every
+  `pct_of_company_profit` figure dropped from $3.97M to $3.69M (excluded
+  rows were disproportionately profitable per-line, so this isn't just
+  proportional to the 4.7% of rows removed). Rewrote the ranking table intro,
+  the "$1.58M / 39.8%" and "$67.8K / 1.7%" combined-group figures (now
+  $1.50M / 40.8% and $67.8K / 1.8%), and the notebook table linking to
+  0.5.1-0.5.8 to reflect the new #1/#2 order.
+
+0.5.1_deepdive_western_europe.ipynb
+  Filter applied: date cutoff (Oct 2017+, problem #1) — this is the ONE deep
+  dive where it has real effect, since Western Europe is the only top/
+  bottom-3 region active that late.
+  Why + impact: rank moved #1 -> #2, profit $625K -> $551K, monthly chart
+  now ends Sep 2017 instead of Nov 2017 (recovery description shortened from
+  "Jun-Nov 2017" to "Jun-Sep 2017"). More substantively: the excluded window
+  contained October-November data that had made DVDs look like the region's
+  only loss-making category (-$491). With that window gone, DVDs is no
+  longer negative at all, and 2 different categories now show small net
+  losses instead (Basketball -$1,396, Strength Training -$107) — rewrote the
+  "only loss category" claim to reflect this.
+
+0.5.2_deepdive_central_america.ipynb
+  Filter applied: date cutoff (Oct 2017+, problem #1) — zero effect on
+  Central America's own numbers (its data ends Jun 2017), but the company-
+  wide profit denominator shrank, so its rank moved #2 -> #1 and its
+  "% of company profit" figure moved 15.5% -> 16.7%. Updated both.
+
+0.5.3_deepdive_south_america.ipynb
+  Filter applied: date cutoff (Oct 2017+, problem #1) — zero effect on South
+  America's own numbers (data ends Jun 2017); rank unchanged at #3, but
+  "% of company profit" moved 8.4% -> 9.1% from the shrunk denominator.
+  Updated.
+
+0.5.4_deepdive_central_asia.ipynb / 0.5.5_deepdive_canada.ipynb /
+0.5.6_deepdive_southern_africa.ipynb
+  Filter applied: date cutoff (Oct 2017+, problem #1) — zero effect on any
+  of these three regions' own numbers (all end by Jan 2017); ranks unchanged
+  (#23/#22/#21). Only the "% of company profit" figures moved fractionally
+  from the shrunk denominator: 0.33%->0.35%, 0.60%->0.65%, 0.78%->0.84%.
+  Updated all three.
+
+0.5.7_top3_common_ground.ipynb
+  Filter applied: date cutoff (Oct 2017+, problem #1), inherited from the
+  same region_perf/RANKS computation as 0.5.
+  Why + impact: reordered the intro region list to Central America / Western
+  Europe / South America to match the new rank order. Updated the combined-
+  group figures ($1.58M/39.8% -> $1.50M/40.8%, bottom-3 comparison
+  1.7%->1.8%) and the revenue/margin ranges cited in "What they share"
+  (revenue range top end $5.30M -> $5.09M since Western Europe's total
+  shrank; margin range 11.8%-12.6% -> 11.9%-12.6%).
+
+0.5.8_bottom3_common_ground.ipynb
+  Filter applied: date cutoff (Oct 2017+, problem #1), inherited the same
+  way; zero effect on the bottom-3 regions themselves.
+  Why + impact: "% of company profit" for the combined bottom-3 group moved
+  1.7% -> 1.8% (denominator shrank) and the Western-Europe-multiple figure
+  moved 9x -> 8.1x. Also replaced a stale comparison ("nothing like Western
+  Europe's -$491 DVDs line") with the new correct one (-$1,396 Basketball
+  line), since DVDs is no longer Western Europe's loss category after 0.5.1's
+  fix above.
+
+0.6_review_by_quarter.ipynb
+  Filter applied: NONE this pass — already handled differently and
+  correctly. Uses a "flag, don't drop" approach: every quarter (including
+  Q4 2017+) stays in the levels view, tagged `artifact_affected`, because
+  0.6's own finding is that profit $ and margin % (unlike revenue-per-order)
+  aren't meaningfully distorted by problem #1 — so dropping those quarters
+  would throw away real, valid figures. This is a deliberately different
+  convention from 0.2-0.5.x's "exclude" approach: 0.6 is a complete-quarters
+  levels report where every quarter needs to appear; 0.2-0.5.x produce
+  rankings/comparisons used to decide which regions or categories get
+  attention, where blending in a known-different regime is the bigger risk.
+
+0.7_region_activity_gaps.ipynb
+  Filter applied: NONE (by design) — this notebook exists specifically to
+  investigate problem #3 (region-rotation) using the full, unfiltered
+  timeline; filtering it would remove the evidence it's built to show.
+
+0.8_consumer_base_analysis.ipynb / 0.8.1_deepdive_top15pct.ipynb
+  Filter applied: date cutoff (Sep 2017, problem #2) — already in place,
+  these are the notebooks that discovered the fake-customer-ID artifact.
+  No changes made this pass.
+
+
+0.9_exposure_adjusted_region_growth.ipynb
+  Filter applied: date cutoff (Oct 2017+, problem #1), same convention as
+  0.2-0.5.x. Also introduces its own "noise-floor" filter (a region's active
+  block excluded from block-to-block comparison if it averages <100 orders/
+  month) to catch a further wrinkle problem #3 produces: the 3 Europe
+  regions and Eastern Asia don't go fully to zero between their real active
+  blocks, they drop to a 1%-of-normal trickle (27-32 orders/month for
+  Europe, 15/month for Eastern Asia) that lands exactly inside the 9-region
+  Aug2016-Jan2017 cohort's window -- read as cross-region leakage, not a
+  second real season, and excluded from the growth comparison on that basis.
+  Why + impact: this notebook asks a new question (growth within a region's
+  own active window, not just its level) that only 8 of 23 regions can
+  answer at all after the Oct-2017 cutoff (15 have exactly one clean window
+  and no second one to compare it to -- Oceania and Southeast Asia's only
+  second burst falls entirely inside the excluded Nov2017-Jan2018 window).
+  Of those 8, one more (Eastern Asia) drops out on the noise-floor filter,
+  leaving 7 regions with a genuine two-window comparison. Headline finding:
+  within those 7, direction and magnitude of change track the region's
+  rotation cohort, not the individual region (all 3 LATAM regions decline
+  -12% to -18% revenue/active-month between windows; all 3 Europe regions
+  grow +14% to +17%; South Asia's outlier -71.9% move is corroborated in
+  direction by its nearest cohort sibling) -- consistent with a shared,
+  time-varying generation parameter, not independent regional trends.
+  Separately finds that every substantial active block, regardless of
+  region or calendar year, ramps up over its first month (~48% of that
+  block's own average) and tapers down over its last (~77%) -- a mechanical
+  fade-in/fade-out pattern, not organic launch/wind-down behavior.
+
+
+SUMMARY TABLE
+--------------
+Notebook                                  Problem #1   Problem #2   Problem #3
+                                           (Oct2017+)   (fake cust)  (region-rot)
+0_data_overview                              -            -            -
+0.1_company_growth                          fixed         -            -
+0.2_sales_corr                              fixed         -          noted
+0.3_prod_category_analyzis                  fixed         -            -
+0.4_prod_region_cross                       fixed         -          fixed (col)
+0.5_by_region_analysis                      fixed         -        is the source
+0.5.1_deepdive_western_europe               fixed         -            -
+0.5.2_deepdive_central_america           fixed (no-op)    -            -
+0.5.3_deepdive_south_america             fixed (no-op)    -            -
+0.5.4_deepdive_central_asia              fixed (no-op)    -            -
+0.5.5_deepdive_canada                    fixed (no-op)    -            -
+0.5.6_deepdive_southern_africa           fixed (no-op)    -            -
+0.5.7_top3_common_ground                    fixed         -            -
+0.5.8_bottom3_common_ground                 fixed         -            -
+0.6_review_by_quarter                    flagged, not      -            -
+                                          dropped (n/a)
+0.7_region_activity_gaps                     -            -        is the source
+0.8_consumer_base_analysis                   -          fixed         -
+0.8.1_deepdive_top15pct                      -          fixed         -
+0.9_exposure_adjusted_region_growth         fixed         -        fixed (noise-
+                                                                    floor filter)
+
+"fixed (no-op)" = filter applied for consistency but changed zero rows for
+that specific region; only the company-wide denominator it references moved.

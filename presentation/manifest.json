@@ -1,0 +1,164 @@
+{
+  "headline": {
+    "total_order_lines_full_dataset": 180519,
+    "full_dataset_date_range": "2015-01-01 to 2018-01-31",
+    "source_notebook": "0_data_overview.ipynb",
+    "clean_analysis_window": "2015-01-01 to 2017-09-30 (excludes the Nov-2017+ order-composition artifact)",
+    "clean_window_order_lines": 171962,
+    "clean_window_real_customers": 12330,
+    "clean_window_customers_source_notebook": "0.8_consumer_base_analysis.ipynb (cell printing 'customer IDs active before Oct 2017: 12,330'); confirms the ~12,330 figure exactly",
+    "yoy_growth_2017_vs_2016_jan_sep_like_for_like_pct": 4.7,
+    "yoy_growth_2016_vs_2015_jan_sep_like_for_like_pct": -0.4,
+    "yoy_growth_source_notebook": "0.1_company_growth.ipynb section 3.2 (like-for-like Jan-Sep YoY read; the -0.4% figure is stated in that section's markdown narrative, not printed as raw stdout digits, but is the notebook's own authoritative number for that comparison)",
+    "quarterly_margin_band_pct": {"min": 10.79, "max": 12.73, "min_quarter": "2016 Q1", "max_quarter": "2016 Q3"},
+    "quarterly_margin_band_source_notebook": "0.6_review_by_quarter.ipynb (printed: 'Margin range, Q1 2015 - Q3 2017 (pre-artifact): 10.79% - 12.73%'; artifact-window quarters Q4 2017-Q1 2018 fall inside this same band at 11.36%-12.46%, so the band holds across the full date range)",
+    "full_dataset_revenue_profit_totals": {
+      "total_sales_usd_millions": 36.78,
+      "total_profit_usd_millions": 3.97,
+      "overall_margin_pct": 10.8,
+      "notes": "Verbatim from 0_data_overview.ipynb cell output ('Total sales: $36.78M', 'Total profit: $3.97M', 'Overall margin: 10.8%'). Covers ALL 180,519 rows (full Jan2015-Jan2018 range, includes the Nov-2017+ artifact window) and uses 'Sales' (pre-discount list price), not 'Order Item Total' (the revenue definition used consistently elsewhere in the archive from 0.2 onward). Not the clean-window figure -- kept separate below.",
+      "source_notebook": "0_data_overview.ipynb"
+    },
+    "clean_window_revenue_profit_totals_derived": {
+      "total_revenue_usd_millions": 30.77,
+      "total_profit_usd_millions": 3.69,
+      "implied_margin_pct": 11.98,
+      "notes": "DERIVED, not a number any notebook printed directly as a single total: summed by simple addition of the 11 quarterly revenue and profit figures Q1 2015 through Q3 2017 (pre-artifact, 'Order Item Total' revenue basis) as printed in 0.6_review_by_quarter.ipynb's quarterly summary table (cell 5 output). No raw-CSV recomputation was performed -- only arithmetic on already-printed notebook output. Included because no notebook printed a single clean-window company-wide dollar total outright; use with that caveat on a leadership slide.",
+      "source_notebook": "0.6_review_by_quarter.ipynb (quarterly table, cell 5), figures summed post-hoc"
+    }
+  },
+
+  "story1_chart_a": {
+    "numbers": {
+      "months_plotted": ["2017-06", "2017-07", "2017-08", "2017-09", "2017-10", "2017-11", "2017-12", "2018-01"],
+      "items_per_order": [2.954057, 2.994369, 3.000566, 3.011608, 1.073298, 1.000000, 1.000000, 1.000000],
+      "avg_order_value_usd": [615.80, 621.83, 627.45, 663.83, 511.18, 305.07, 237.25, 156.22],
+      "break_marker": "2017-11-01"
+    },
+    "source_notebook": "0.1_company_growth.ipynb",
+    "notes": "Notebook's printed monthly table (cell 5, `monthly.tail(8)`) only shows Jun 2017 - Jan 2018 verbatim -- it does not print the full Jan2017-Jan2018 series the brief asked for, only this 8-month tail. Used exactly what was printed rather than extending the range with unverified numbers or recomputing from the raw CSV. This 8-month window already shows the full pattern clearly: items/order flat ~3.0 through Sep 2017, then falls to exactly 1.0 by Nov 2017; order value flat ~$615-664, falls to $156 by Jan 2018. Vertical break marker placed at Nov 2017 per spec, even though the drop is visibly already underway in Oct 2017's partial figures (1.07 items/order, $511 order value)."
+  },
+
+  "story1_chart_b": {
+    "numbers": {
+      "quarters": ["2015 Q1","2015 Q2","2015 Q3","2015 Q4","2016 Q1","2016 Q2","2016 Q3","2016 Q4","2017 Q1","2017 Q2","2017 Q3","2017 Q4","2018 Q1"],
+      "margin_pct": [11.92, 11.90, 12.52, 11.24, 10.79, 12.10, 12.73, 11.77, 12.63, 11.97, 12.17, 12.46, 11.36],
+      "band_min_pct": 10.79,
+      "band_max_pct": 12.73
+    },
+    "source_notebook": "0.6_review_by_quarter.ipynb",
+    "notes": "All 13 quarterly margin_pct values pulled verbatim from the notebook's printed quarterly summary table (cell 5). Margin = Order Profit Per Order / Order Item Total. No visible step change at the Nov 2017 (Q4 2017) boundary -- Q4 2017 (12.46%) and Q1 2018 (11.36%) both sit comfortably inside the pre-artifact 10.79%-12.73% band, confirming the notebook's own takeaway that margin is undistorted by the order-composition artifact."
+  },
+
+  "story2_chart_a": {
+    "numbers": {
+      "naive_rank": 9,
+      "weighted_rank": 26,
+      "total_qualifying_categories": 32,
+      "naive_margin_pct": 12.73,
+      "weighted_margin_pct": 11.51
+    },
+    "source_notebook": "1_cardio_equipment_cost_driver.ipynb (section 1, corrected-denominator confirmation)",
+    "notes": "Placeholder ranks (9 and 26) matched exactly what the notebooks print. 0.4_prod_region_cross.ipynb originally found this using margin = profit/Sales (naive_mean 11.43%, weighted 10.35%, same 9->26 rank shift). 1_cardio_equipment_cost_driver.ipynb section 1 redid the comparison with the corrected denominator (profit/Order Item Total, the archive's standard) and confirmed the identical rank shift (naive 12.73%, weighted 11.51%, rank 9 -> 26 of 32 qualifying categories), so the corrected numbers are used here per the task instructions."
+  },
+
+  "story2_chart_b": {
+    "numbers": {
+      "markets": ["Africa", "LATAM", "USCA", "Southern Europe/Europe (aggregate)", "Pacific Asia"],
+      "margin_pct_by_market": {"Africa": 14.516, "LATAM": 12.852, "USCA": 11.001, "Europe": 10.475, "Pacific Asia": 10.249},
+      "sku": "Nike Men's Free 5.0+ Running Shoe (Cardio Equipment's dominant SKU, 97.4% of category order lines)",
+      "avg_profit_ratio_africa_alt_metric_pct": 15.5
+    },
+    "source_notebook": "1_cardio_equipment_cost_driver.ipynb (section 4)",
+    "notes": "IMPORTANT DEVIATION FROM SPEC: the notebook shows 5 markets (Africa, LATAM, Europe, Pacific Asia, USCA), not the 4 named in the brief -- Cardio Equipment sells in all 5 of the dataset's Market values, and LATAM is a real fifth data point sitting between Africa and the other three on both volume and margin. Used all 5 real markets rather than dropping LATAM to force-fit 4. Chart values are `margin_pct` (total profit / total revenue per market, the notebook's headline metric); the notebook's prose also mentions an alternate ~15.5% figure for Africa which is `avg_profit_ratio` (mean of the per-order-line ratio field, a slightly different aggregation) -- the 14.516% weighted margin_pct was used for consistency with the other 4 markets and with the archive's standard margin definition."
+  },
+
+  "story3_chart_a": {
+    "numbers": {
+      "categories": ["Normal (on-time)", "Late delivery", "Suspected fraud", "Canceled"],
+      "margin_pct": {"Normal (on-time)": 12.20, "Late delivery": 11.74, "Suspected fraud": 11.27, "Canceled": 12.61},
+      "company_average_margin_pct": 12.04
+    },
+    "source_notebook": "2_fraud_late_delivery_exposure.ipynb (primary; Late delivery/Suspected fraud/Canceled/company average) + 1_cardio_equipment_cost_driver.ipynb cell 11 (Normal/on-time figure)",
+    "notes": "2_fraud_late_delivery_exposure.ipynb prints Late delivery risk=1 margin (11.74%), SUSPECTED_FRAUD margin (11.27%), CANCELED margin (12.61%), and company average (12.04%) directly (section 1). It does NOT isolate an on-time-only margin figure. The 'Normal (on-time)' bar (12.20%) is pulled from 1_cardio_equipment_cost_driver.ipynb cell 11, which prints company-wide margin by Late_delivery_risk (0 -> 12.20%, 1 -> 11.91%) on the same filtered/clean dataset and same margin definition, using a slightly different aggregation (mean of per-row ratios rather than sum-of-profit/sum-of-revenue) -- hence the small difference between its late-delivery figure (11.91%) and 2_fraud's (11.74%); the 2_fraud figure was used for the Late delivery bar since that notebook is the designated primary source. All four bars land within about 1 percentage point of the 12.04% company average, which is exactly the point of this chart."
+  },
+
+  "story3_chart_b": {
+    "numbers": {
+      "fraud_rate_panel": {
+        "Western Europe": {"fraud_rate_pct": 2.61, "z_score": 5.09, "n_orders": 25377},
+        "Canada": {"fraud_rate_pct": 3.02, "z_score": 1.87, "n_orders": 959}
+      },
+      "late_delivery_rate_panel": {
+        "Canada": {"late_rate_pct": 48.80, "z_score": -3.63, "n_orders": 959},
+        "Central Africa": {"late_rate_pct": 57.96, "z_score": 2.73, "n_orders": 1677},
+        "South Asia": {"late_rate_pct": 56.31, "z_score": 2.72, "n_orders": 6612}
+      },
+      "company_avg_fraud_rate_pct": 2.1,
+      "company_avg_late_rate_pct": 54.6,
+      "permutation_test_p_values": {"fraud_rate_by_region": 0.007, "late_rate_by_region": 0.002, "fraud_rate_by_category": 0.156, "late_rate_by_category": 0.224}
+    },
+    "source_notebook": "2_fraud_late_delivery_exposure.ipynb",
+    "notes": "Two-panel layout used as suggested (fraud rate left, late-delivery rate right) since the two metrics have different scales. Reference lines (2.1% fraud, 54.6% late) are the notebook's own printed unweighted across-region average figures (used in its z-score calc and prose), not the order-weighted company-wide rates (2.25% fraud / 54.8% late) printed elsewhere in the same notebook -- used the region-average figures since those are what the z-scores in this chart are actually measured against. Canada appears in both panels (highest raw fraud rate but a less extreme z-score of 1.87, so colored as 'notably worse' on fraud; lowest late-delivery rate by far at z=-3.63, colored as the 'better than average' standout, gray)."
+  },
+
+  "story4_chart_a": {
+    "numbers": {
+      "region_months_active_of_36": {
+        "East of USA": 5, "US Center": 5, "West of USA": 5, "South of  USA": 5,
+        "Canada": 6, "West Asia": 6, "Central Africa": 6, "West Africa": 6,
+        "Central Asia": 6, "East Africa": 6, "Eastern Europe": 6, "North Africa": 6, "Southern Africa": 6,
+        "Southeast Asia": 10, "Oceania": 10,
+        "South America": 11, "Central America": 11, "Caribbean": 11,
+        "Eastern Asia": 14, "South Asia": 15,
+        "Northern Europe": 18, "Southern Europe": 18, "Western Europe": 18
+      },
+      "highlighted_7_regions_with_genuine_two_window_comparison": ["Caribbean", "Central America", "South America", "Western Europe", "Northern Europe", "Southern Europe", "South Asia"]
+    },
+    "source_notebook": "0.7_region_activity_gaps.ipynb (months-active table) cross-referenced with 3_exposure_adjusted_region_growth.ipynb (which 7 regions get a genuine two-window comparison)",
+    "notes": "All 23 regions and exact months_active values pulled verbatim from 0.7's summary table (cell 10). Font size for y-axis labels set to 8.5pt per spec's exception for the 23-bar chart. The 7 highlighted (blue) regions match exactly the '7 regions with two genuinely substantial windows to compare' finding in 3_exposure_adjusted_region_growth.ipynb section 2 -- no discrepancy from the brief's placeholder count."
+  },
+
+  "story4_chart_b": {
+    "numbers": {
+      "LATAM_pct_change_first_to_last_window": {"Caribbean": -17.8, "Central America": -11.8, "South America": -17.6},
+      "Europe_pct_change_first_to_last_window": {"Southern Europe": 17.1, "Western Europe": 16.9, "Northern Europe": 13.7},
+      "metric": "revenue per active month, first substantial window vs. last substantial window"
+    },
+    "source_notebook": "3_exposure_adjusted_region_growth.ipynb",
+    "notes": "Exact values from the notebook's printed comparison table (cell 13): all 3 LATAM regions decline together (-11.8% to -17.8%, matching the brief's placeholder almost exactly), all 3 Europe regions grow together (+13.7% to +17.1%). South Asia's -71.9% (Pacific-Asia cohort, no sibling to compare) was intentionally left out of this chart since the brief specifically asked for just the 3 LATAM vs. 3 Europe grouped comparison."
+  },
+
+  "story5_chart_a": {
+    "numbers": {
+      "order_count_tier": ["1","2","3","4","5","6","7","8","9","10+"],
+      "mean_lifetime_spend_usd": [529.3, 1078.3, 1614.3, 2146.6, 2698.9, 3168.1, 3777.7, 4359.8, 4814.7, 5680.0],
+      "added_value_per_tier_usd": [null, 549.0, 535.9, 532.3, 552.3, 469.3, 609.5, 582.1, 454.9, 865.4],
+      "avg_added_value_usd": 570
+    },
+    "source_notebook": "0.8_consumer_base_analysis.ipynb section 8",
+    "notes": "Both the mean lifetime spend by tier and the tier-to-tier step-up (added value) tables pulled verbatim from the notebook's printed output (cell 34). Step-up bounces $455-$865 with mean ~$570 and no trend, confirming additive (not accelerating) LTV growth -- matches the brief's ~$530-610 placeholder range closely, with tier 10 (open-ended 10+) showing more noise as expected from a smaller sample (n=258)."
+  },
+
+  "story5_chart_b": {
+    "numbers": {
+      "baseline_top15pct_rate_pct": 15.1,
+      "below_median_90d_spend_and_reordered_pct": 9.9,
+      "above_median_90d_spend_no_reorder_pct": 15.5,
+      "above_median_90d_spend_and_reordered_pct": 25.7,
+      "below_median_90d_spend_no_reorder_pct": 8.7
+    },
+    "source_notebook": "0.8.1_deepdive_top15pct.ipynb section 4",
+    "notes": "Numbers pulled verbatim from the notebook's printed combo table (cell 26): baseline top-15% rate 15.1% (cell 22); the 4 conditions used in the chart are baseline, 'reorder without matching spend' (below-median 90-day spend + reordered = 9.9%, closely matching the brief's ~9.9% placeholder exactly), 'above-median spend alone' (no reorder = 15.5%), and the standout combined condition (above-median spend + early reorder = 25.7%, matching the brief's ~25.7% placeholder exactly). The notebook's 5th cell (below-median spend, no reorder = 8.7%) was omitted from the chart as the weakest/reference condition, matching the brief's 4-bar spec."
+  },
+
+  "story6_chart": {
+    "numbers": {
+      "discount_buckets": ["0%","1-5%","6-10%","11-15%","16-20%","21-25%"],
+      "real_data_mean_line_items_per_order": [1.05, 2.37, 3.29, 3.38, 2.47, 1.49],
+      "shuffled_null_test_mean_line_items_per_order": [1.06, 2.27, 3.28, 3.37, 2.46, 1.42]
+    },
+    "source_notebook": "5_discount_experiment_design.ipynb section 5",
+    "notes": "Both curves pulled verbatim from the notebook's printed dicts (cell 20: `order_view['n_lines']` and `shuf_view`). The near-identical inverted-U shape between real and randomly-shuffled discount assignment is the notebook's core finding: the apparent 6-15%-discount 'sweet spot' is regression-to-the-mean on order-level average-of-random-draws, not a real behavioral threshold effect."
+  }
+}
